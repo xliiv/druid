@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use druid::lens::{self, LensExt};
 use druid::widget::{Flex, Label, List, Scroll, TextBox, WidgetExt};
 use druid::{AppLauncher, Data, Lens, Widget, WindowDesc};
 use std::sync::Arc;
@@ -41,13 +42,25 @@ fn main() {
 
 fn build_widget() -> impl Widget<AppData> {
     Flex::column()
-        .with_child(TextBox::new()
-            .lens(AppData::searched), 0.0)
+        .with_child(TextBox::new().lens(AppData::searched), 0.0)
         .with_child(
             Scroll::new(List::new(|| {
                 Label::new(|item: &String, _env: &_| format!("{}", item))
             }))
-            .lens(AppData::listing),
+            .lens(lens::Id.map(
+                |d: &AppData| d.listing.clone(),
+                |d: &mut AppData, x: Arc<Vec<String>>| {
+                    dbg!("quering");
+                    if d.searched != "" {
+                        let filtered = x
+                            .iter()
+                            .filter(|i| **i == d.searched)
+                            .map(|i| i.to_string())
+                            .collect::<Vec<String>>();
+                        d.listing = Arc::new(filtered);
+                    }
+                },
+            )),
             0.0,
         )
 }
