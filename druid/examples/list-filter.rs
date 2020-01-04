@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use druid::lens::{self, LensExt};
-use druid::widget::{Button, Flex, Label, List, Scroll, TextBox, WidgetExt};
+use druid::widget::{Flex, Label, List, Scroll, TextBox, WidgetExt};
 use druid::{AppLauncher, Data, Lens, Widget, WindowDesc};
 use std::sync::Arc;
 
@@ -36,41 +36,34 @@ fn build_widget() -> impl Widget<AppData> {
     Flex::column()
         .with_child(
             Flex::row()
-                .with_child(TextBox::new().lens(AppData::searched), 0.0)
-                .with_child(Button::new("increment", |ctx, data, _env| {
-                    dbg!("clicked");
-                    ctx.invalidate();
-                    dbg!(data);
-                }),
-                0.0
-            ),
+                .with_child(
+                    TextBox::new().lens(lens::Id.map(
+                        |d: &AppData| d.searched.clone(),
+                        |d: &mut AppData, new_value: String| {
+                            d.searched = new_value;
+                            d.listing = Arc::new(
+                                "apple bananas orange pineapple"
+                                    .split(' ')
+                                    .filter(|i| {
+                                        if d.searched.as_ref() as &str == "" {
+                                            return true;
+                                        }
+                                        i.contains(&d.searched)
+                                    })
+                                    .map(|s| s.to_string())
+                                    .collect::<Vec<String>>()
+                                );
+                        }
+                    )),
+                    0.0
+                ),
             0.0
         )
         .with_child(
             Scroll::new(List::new(|| {
                 Label::new(|item: &String, _env: &_| format!("{}", item))
             }))
-            .lens(lens::Id.map(
-                |d: &AppData| d.listing.clone(),
-                |d: &mut AppData, x: Arc<Vec<String>>| {
-                    dbg!("quering");
-                    d.listing = if d.searched != "" {
-                        let filtered = x
-                            .iter()
-                            .filter(|i| **i == d.searched)
-                            .map(|i| i.to_string())
-                            .collect::<Vec<String>>();
-                        Arc::new(filtered)
-                    } else {
-                        Arc::new(
-                            "Apple Bananas Orange Pineapple"
-                                .split(' ')
-                                .map(|s| s.to_string())
-                                .collect()
-                        )
-                    }
-                },
-            )),
+            .lens(AppData::listing),
             0.0,
         )
 }
