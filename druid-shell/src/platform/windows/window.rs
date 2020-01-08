@@ -26,7 +26,6 @@ use std::sync::{Arc, Mutex};
 
 use log::{debug, error, warn};
 use winapi::ctypes::{c_int, c_void};
-use winapi::shared::basetsd::*;
 use winapi::shared::dxgi::*;
 use winapi::shared::dxgi1_2::*;
 use winapi::shared::dxgiformat::*;
@@ -191,6 +190,18 @@ struct DCompState {
 
 /// Message indicating there are idle tasks to run.
 const XI_RUN_IDLE: UINT = WM_USER;
+
+/// Message relaying a request to destroy the window
+///
+/// Calling `DestroyWindow` from inside the handler is problematic
+/// because it will recursively cause a `WM_DESTROY` message to be
+/// sent to the window procedure, even while the handler is borrowed.
+/// Thus, the message is dropped and the handler doesn't run.
+///
+/// As a solution, instead of immediately calling `DestroyWindow`, we
+/// send this message to request destroying the window, so that at the
+/// time it is handled, we can successfully borrow the handler.
+const XI_REQUEST_DESTROY: UINT = WM_USER + 1;
 
 impl Default for PresentStrategy {
     fn default() -> PresentStrategy {
@@ -689,6 +700,12 @@ impl WndProc for MyWndProc {
                 }
                 Some(0)
             }
+            XI_REQUEST_DESTROY => {
+                unsafe {
+                    DestroyWindow(hwnd);
+                }
+                Some(0)
+            }
             WM_DESTROY => {
                 if let Ok(mut s) = self.state.try_borrow_mut() {
                     let s = s.as_mut().unwrap();
@@ -977,6 +994,11 @@ unsafe fn create_dcomp_state(
     }
 }
 
+#[cfg(target_arch = "x86_64")]
+type WindowLongPtr = winapi::shared::basetsd::LONG_PTR;
+#[cfg(target_arch = "x86")]
+type WindowLongPtr = LONG;
+
 pub(crate) unsafe extern "system" fn win_proc_dispatch(
     hwnd: HWND,
     msg: UINT,
@@ -986,7 +1008,7 @@ pub(crate) unsafe extern "system" fn win_proc_dispatch(
     if msg == WM_CREATE {
         let create_struct = &*(lparam as *const CREATESTRUCTW);
         let wndproc_ptr = create_struct.lpCreateParams;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, wndproc_ptr as LONG_PTR);
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, wndproc_ptr as WindowLongPtr);
     }
     let window_ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *const WindowState;
     let result = {
@@ -1080,7 +1102,7 @@ impl WindowHandle {
         if let Some(w) = self.state.upgrade() {
             let hwnd = w.hwnd.get();
             unsafe {
-                DestroyWindow(hwnd);
+                PostMessageW(hwnd, XI_REQUEST_DESTROY, 0, 0);
             }
         }
     }

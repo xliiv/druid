@@ -14,17 +14,13 @@
 
 //! A button widget.
 
-use crate::{
-    BaseState, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, Size, UpdateCtx,
-    Widget,
-};
-
-use crate::kurbo::RoundedRect;
-use crate::piet::{LinearGradient, UnitPoint};
-
+use crate::kurbo::{Point, RoundedRect, Size};
 use crate::theme;
 use crate::widget::{Align, Label, LabelText, SizedBox};
-use crate::{Point, RenderContext};
+use crate::{
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LinearGradient, PaintCtx, RenderContext,
+    UnitPoint, UpdateCtx, Widget,
+};
 
 /// A button with a text label.
 pub struct Button<T> {
@@ -115,12 +111,12 @@ impl<T: Data> Widget<T> for Button<T> {
         self.label.layout(layout_ctx, bc, data, env)
     }
 
-    fn paint(&mut self, paint_ctx: &mut PaintCtx, base_state: &BaseState, data: &T, env: &Env) {
-        let is_active = base_state.is_active();
-        let is_hot = base_state.is_hot();
+    fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &T, env: &Env) {
+        let is_active = paint_ctx.is_active();
+        let is_hot = paint_ctx.is_hot();
 
         let rounded_rect =
-            RoundedRect::from_origin_size(Point::ORIGIN, base_state.size().to_vec2(), 4.);
+            RoundedRect::from_origin_size(Point::ORIGIN, paint_ctx.size().to_vec2(), 4.);
         let bg_gradient = if is_active {
             LinearGradient::new(
                 UnitPoint::TOP,
@@ -145,6 +141,6 @@ impl<T: Data> Widget<T> for Button<T> {
 
         paint_ctx.fill(rounded_rect, &bg_gradient);
 
-        self.label.paint(paint_ctx, base_state, data, env);
+        self.label.paint(paint_ctx, data, env);
     }
 }

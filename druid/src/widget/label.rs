@@ -14,19 +14,16 @@
 
 //! A label widget.
 
+use crate::kurbo::{Point, Rect, Size};
+use crate::piet::{
+    FontBuilder, PietText, PietTextLayout, RenderContext, Text, TextLayout, TextLayoutBuilder,
+    UnitPoint,
+};
+use crate::theme;
 use crate::{
-    BaseState, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, Size, UpdateCtx,
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LocalizedString, PaintCtx, UpdateCtx,
     Widget,
 };
-
-use crate::kurbo::Rect;
-use crate::piet::{
-    FontBuilder, PietText, PietTextLayout, Text, TextLayout, TextLayoutBuilder, UnitPoint,
-};
-
-use crate::localization::LocalizedString;
-use crate::theme;
-use crate::{Point, RenderContext};
 
 /// The text for the label
 pub enum LabelText<T> {
@@ -135,7 +132,7 @@ impl<T: Data> Widget<T> for Label<T> {
         bc.constrain(Size::new(text_layout.width(), font_size * 1.2))
     }
 
-    fn paint(&mut self, paint_ctx: &mut PaintCtx, base_state: &BaseState, data: &T, env: &Env) {
+    fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &T, env: &Env) {
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let text_layout = self.get_layout(paint_ctx.text(), env, data);
 
@@ -143,13 +140,13 @@ impl<T: Data> Widget<T> for Label<T> {
         let mut origin = self.align.resolve(Rect::from_origin_size(
             Point::ORIGIN,
             Size::new(
-                (base_state.size().width - text_layout.width()).max(0.0),
-                base_state.size().height + (font_size * 1.2) / 2.,
+                (paint_ctx.size().width - text_layout.width()).max(0.0),
+                paint_ctx.size().height + (font_size * 1.2) / 2.,
             ),
         ));
 
         //Make sure we don't draw the text too low
-        origin.y = origin.y.min(base_state.size().height);
+        origin.y = origin.y.min(paint_ctx.size().height);
 
         paint_ctx.draw_text(&text_layout, origin, &env.get(theme::LABEL_COLOR));
     }

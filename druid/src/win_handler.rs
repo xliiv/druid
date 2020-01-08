@@ -29,12 +29,13 @@ use crate::shell::{
 };
 
 use crate::app_delegate::{AppDelegate, DelegateCtx};
+use crate::core::BaseState;
 use crate::menu::ContextMenu;
 use crate::theme;
 use crate::window::Window;
 use crate::{
-    BaseState, Command, Data, Env, Event, EventCtx, KeyEvent, KeyModifiers, LayoutCtx, LifeCycle,
-    MenuDesc, PaintCtx, TimerToken, UpdateCtx, WheelEvent, WindowDesc, WindowId,
+    Command, Data, Env, Event, EventCtx, KeyEvent, KeyModifiers, LayoutCtx, LifeCycle, MenuDesc,
+    PaintCtx, TimerToken, UpdateCtx, WheelEvent, WindowDesc, WindowId,
 };
 
 use crate::command::sys as sys_cmd;
@@ -173,8 +174,10 @@ impl<'a, T: Data + 'static> SingleWindowState<'a, T> {
     }
 
     fn do_paint(&mut self, piet: &mut Piet) {
+        let base_state = BaseState::default();
         let mut paint_ctx = PaintCtx {
             render_ctx: piet,
+            base_state: &base_state,
             window_id: self.window_id,
             region: Rect::ZERO.into(),
         };
@@ -210,7 +213,7 @@ impl<'a, T: Data + 'static> SingleWindowState<'a, T> {
             base_state: &mut base_state,
             is_handled: false,
             is_root: true,
-            had_active: self.window.root.state.has_active,
+            had_active: self.window.root.has_active(),
             window: &self.state.handle,
             window_id: self.window_id,
         };
@@ -242,7 +245,7 @@ impl<'a, T: Data + 'static> SingleWindowState<'a, T> {
 
         let platform_menu = menu.build_window_menu(&self.data, &self.env);
         self.state.handle.set_menu(platform_menu);
-        self.window.menu = Some(menu.to_owned());
+        self.window.menu = Some(menu);
     }
 
     fn show_context_menu(&mut self, cmd: &Command) {
@@ -668,6 +671,11 @@ impl<T: Data + 'static> WinHandler for DruidHandler<T> {
 
     fn wheel(&mut self, delta: Vec2, mods: KeyModifiers, ctx: &mut dyn WinCtx) {
         let event = Event::Wheel(WheelEvent { delta, mods });
+        self.do_event(event, ctx);
+    }
+
+    fn zoom(&mut self, delta: f64, ctx: &mut dyn WinCtx) {
+        let event = Event::Zoom(delta);
         self.do_event(event, ctx);
     }
 

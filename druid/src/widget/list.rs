@@ -19,8 +19,7 @@ use std::sync::Arc;
 use crate::kurbo::{Point, Rect, Size};
 
 use crate::{
-    BaseState, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, UpdateCtx, Widget,
-    WidgetPod,
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, UpdateCtx, Widget, WidgetPod,
 };
 
 /// A list widget for a variable-size collection of items.
@@ -133,6 +132,7 @@ impl<C: Data, T: ListIter<C>> Widget<T> for List<C> {
         });
     }
 
+    #[allow(clippy::comparison_chain)] // clippy doesn't like our very reasonable if  { } else if { }
     fn update(&mut self, ctx: &mut UpdateCtx, _old_data: Option<&T>, data: &T, env: &Env) {
         let mut children = self.children.iter_mut();
         data.for_each(|child_data, _| {
@@ -189,7 +189,7 @@ impl<C: Data, T: ListIter<C>> Widget<T> for List<C> {
         bc.constrain(Size::new(width, y))
     }
 
-    fn paint(&mut self, paint_ctx: &mut PaintCtx, _base_state: &BaseState, data: &T, env: &Env) {
+    fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &T, env: &Env) {
         let mut children = self.children.iter_mut();
         data.for_each(|child_data, _| {
             if let Some(child) = children.next() {

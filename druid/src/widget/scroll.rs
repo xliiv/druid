@@ -14,20 +14,16 @@
 
 //! A container that scrolls its contents.
 
+use log::error;
 use std::f64::INFINITY;
 use std::time::{Duration, Instant};
 
-use log::error;
-
-use crate::{
-    BaseState, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, Point, Rect, Size,
-    TimerToken, UpdateCtx, Vec2, Widget, WidgetPod,
-};
-
-use crate::piet::RenderContext;
+use crate::kurbo::{Affine, Point, Rect, RoundedRect, Size, Vec2};
 use crate::theme;
-
-use crate::kurbo::{Affine, RoundedRect};
+use crate::{
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, RenderContext, TimerToken,
+    UpdateCtx, Widget, WidgetPod,
+};
 
 #[derive(Debug, Clone)]
 enum ScrollDirection {
@@ -268,7 +264,7 @@ impl<T: Data, W: Widget<T>> Scroll<T, W> {
 
 impl<T: Data, W: Widget<T>> Widget<T> for Scroll<T, W> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
-        let size = ctx.base_state.size();
+        let size = ctx.size();
         let viewport = Rect::from_origin_size(Point::ORIGIN, size);
 
         if match event {
@@ -405,17 +401,17 @@ impl<T: Data, W: Widget<T>> Widget<T> for Scroll<T, W> {
         self.child_size = size;
         self.child
             .set_layout_rect(Rect::from_origin_size(Point::ORIGIN, size));
-        let self_size = bc.constrain(Size::new(100.0, 100.0));
+        let self_size = bc.constrain(self.child_size);
         let _ = self.scroll(Vec2::new(0.0, 0.0), self_size);
         self_size
     }
 
-    fn paint(&mut self, paint_ctx: &mut PaintCtx, base_state: &BaseState, data: &T, env: &Env) {
+    fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &T, env: &Env) {
         if let Err(e) = paint_ctx.save() {
             error!("saving render context failed: {:?}", e);
             return;
         }
-        let viewport = Rect::from_origin_size(Point::ORIGIN, base_state.size());
+        let viewport = Rect::from_origin_size(Point::ORIGIN, paint_ctx.size());
         paint_ctx.clip(viewport);
         paint_ctx.transform(Affine::translate(-self.scroll_offset));
 

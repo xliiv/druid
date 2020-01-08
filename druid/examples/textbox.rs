@@ -14,14 +14,13 @@
 
 //! Demos the textbox widget, as well as menu creation and overriding theme settings.
 
-use druid::piet::Color;
 use druid::widget::{EnvScope, Flex, Label, Padding, TextBox};
-use druid::{theme, AppLauncher, Data, LocalizedString, MenuDesc, Widget, WindowDesc};
+use druid::{theme, AppLauncher, Color, Data, LocalizedString, MenuDesc, Widget, WindowDesc};
 
 fn main() {
     let window = WindowDesc::new(build_widget).menu(make_main_menu());
     AppLauncher::with_window(window)
-        .configure_env(|env| {
+        .configure_env(|env, _| {
             env.set(theme::SELECTION_COLOR, Color::rgb8(0xA6, 0xCC, 0xFF));
             env.set(theme::WINDOW_BACKGROUND_COLOR, Color::WHITE);
             env.set(theme::LABEL_COLOR, Color::BLACK);
@@ -36,13 +35,13 @@ fn main() {
 fn build_widget() -> impl Widget<String> {
     let textbox = TextBox::new();
     let textbox_2 = EnvScope::new(
-        |env| {
+        |env, _| {
             env.set(theme::BACKGROUND_LIGHT, Color::rgb8(50, 50, 50));
             env.set(theme::LABEL_COLOR, Color::WHITE);
             env.set(theme::CURSOR_COLOR, Color::WHITE);
             env.set(theme::SELECTION_COLOR, Color::rgb8(100, 100, 100));
         },
-        TextBox::new(),
+        TextBox::with_placeholder("placeholder"),
     );
     let label = Label::new(|data: &String, _env: &_| format!("value: {}", data));
 

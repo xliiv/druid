@@ -15,11 +15,11 @@
 //! A slider widget.
 
 use crate::kurbo::{Circle, Point, Rect, RoundedRect, Shape, Size};
-use crate::piet::{LinearGradient, RenderContext, UnitPoint};
 use crate::theme;
 use crate::widget::Align;
 use crate::{
-    BaseState, BoxConstraints, Env, Event, EventCtx, LayoutCtx, PaintCtx, UpdateCtx, Widget,
+    BoxConstraints, Env, Event, EventCtx, LayoutCtx, LinearGradient, PaintCtx, RenderContext,
+    UnitPoint, UpdateCtx, Widget,
 };
 
 /// A slider, allowing interactive update of a numeric value.
@@ -52,7 +52,7 @@ impl Slider {
 impl Widget<f64> for Slider {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut f64, env: &Env) {
         let knob_size = env.get(theme::BASIC_WIDGET_HEIGHT);
-        let slider_width = ctx.base_state.size().width;
+        let slider_width = ctx.size().width;
 
         match event {
             Event::MouseDown(mouse) => {
@@ -117,9 +117,9 @@ impl Widget<f64> for Slider {
         }
     }
 
-    fn paint(&mut self, paint_ctx: &mut PaintCtx, base_state: &BaseState, data: &f64, env: &Env) {
+    fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &f64, env: &Env) {
         let clamped = data.max(0.0).min(1.0);
-        let rect = Rect::from_origin_size(Point::ORIGIN, base_state.size());
+        let rect = Rect::from_origin_size(Point::ORIGIN, paint_ctx.size());
         let knob_size = env.get(theme::BASIC_WIDGET_HEIGHT);
         let track_thickness = 4.;
 
@@ -144,7 +144,7 @@ impl Widget<f64> for Slider {
         paint_ctx.fill(background_rect, &background_gradient);
 
         //Get ready to paint the knob
-        let is_active = base_state.is_active();
+        let is_active = paint_ctx.is_active();
         let is_hovered = self.knob_hovered;
 
         let knob_position = (rect.width() - knob_size) * clamped + knob_size / 2.;

@@ -14,9 +14,9 @@
 
 //! A widget that switches dynamically between two child views.
 
+use crate::kurbo::{Point, Rect, Size};
 use crate::{
-    BaseState, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, Point, Rect, Size,
-    UpdateCtx, Widget, WidgetPod,
+    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, PaintCtx, UpdateCtx, Widget, WidgetPod,
 };
 
 /// A widget that switches between two possible child views.
@@ -89,7 +89,7 @@ impl<T: Data> Widget<T> for Either<T> {
         }
     }
 
-    fn paint(&mut self, paint_ctx: &mut PaintCtx, _base_state: &BaseState, data: &T, env: &Env) {
+    fn paint(&mut self, paint_ctx: &mut PaintCtx, data: &T, env: &Env) {
         if self.current {
             self.true_branch.paint(paint_ctx, data, env);
         } else {
