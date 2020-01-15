@@ -17,12 +17,13 @@ use druid::{AppLauncher, Widget, WindowDesc};
 
 // This not
 fn main () {
-    dbg!("launch_gui");
+    dbg!("LAUNCH_GUI");
 
     let mut should_gui = true;
     loop {
+        dbg!("LOOP ITERATION");
         if should_gui == true {
-            dbg!("INSIDE");
+            dbg!("SHOW GUI");
             should_gui = false;
 
             let window = WindowDesc::new(build_widget);
@@ -31,13 +32,11 @@ fn main () {
                 .launch(0_u32)
                 .expect("launch failed");
 
-            dbg!("GUI killed");
-
+            dbg!("GUI KILLED");
         }
         let sleep_time = time::Duration::from_millis(100);
         thread::sleep(sleep_time);
     }
-
 }
 
 fn build_widget() -> impl Widget<u32> {
