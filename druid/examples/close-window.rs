@@ -47,7 +47,8 @@ fn build_widget() -> impl Widget<u32> {
                 "Close",
                 |evt_ctx , data: _, _env| {
                     dbg!(&data);
-                    evt_ctx.window().close();
+                    //evt_ctx.window().close();
+                    evt_ctx.submit_command(druid::commands::CLOSE_WINDOW, None);
                 },
                 80.0,
                 20.0,
